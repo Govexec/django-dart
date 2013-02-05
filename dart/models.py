@@ -1,13 +1,11 @@
+import hashlib
 from django.db import models
 from django.template.defaultfilters import slugify
 from ckeditor.fields import RichTextField
 from coffin.template import Context, loader
 from django.conf import settings
-from settings import UPLOAD_PATH
 from time import mktime
 from datetime import datetime
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes import generic
 from django.contrib.sites.models import Site as Django_Site
 
 
@@ -119,7 +117,7 @@ class Custom_Ad(models.Model):
 	
 	url = models.URLField(null=True, blank=True, help_text="Click tag URL")
 	
-	image = models.ImageField(null=True, blank=True, upload_to=UPLOAD_PATH + "custom_ads", help_text="Image for custom ad")
+	image = models.ImageField(null=True, blank=True, upload_to=settings.UPLOAD_PATH + "custom_ads", help_text="Image for custom ad")
 	
 	embed = RichTextField(null=True, blank=True)
 	
@@ -177,7 +175,7 @@ class Zone_Position(models.Model):
 	class Meta:
 		verbose_name = "Enabled Position"
 		verbose_name_plural = "Enabled Positions"
-        ordering = ["zone__name"]
+		ordering = ["zone__name"]
 
 class Ad_Page(object):
 	""" 
@@ -265,16 +263,50 @@ class Ad_Page(object):
 			return None
 			
 	def has_ad(self, *args, **kwargs):
-		
 		""" Doesn't render an ad, just checks for existence in ad manager """
-		return self._query_ad(*args, **kwargs).exists()
+		# cache the results in the "_has_ad" attribute
+		if not hasattr(self, '_has_ad'):
+			self._has_ad = {}
+		arg_list = []
+		kwarg_list = []
+		for count, thing in enumerate(args):
+			arg_list.append('{0}'.format(thing))
+		for name, value in kwargs.items():
+			kwarg_list.append('{0}={1}'.format(name, value))
+		has_ad_hash_string = None
+		if len(arg_list) > 0:
+			if len(arg_list) > 1:
+				arg_list.sort()
+			has_ad_hash_string = ','.join(arg_list)
+		if len(kwarg_list) > 0:
+			if len(kwarg_list) > 1:
+				kwarg_list.sort()
+			if has_ad_hash_string:
+				has_ad_hash_string = '%s,%s' % (has_ad_hash_string, ','.join(kwarg_list),)
+			else:
+				has_ad_hash_string = ','.join(kwarg_list)
+
+		has_ad_hash = None
+		if has_ad_hash_string:
+			md5 = hashlib.md5()
+			md5.update(has_ad_hash_string)
+			has_ad_hash = md5.hexdigest()
+			if self._has_ad.has_key(has_ad_hash):
+				# return cached results
+				return self._has_ad[has_ad_hash]
+
+		if has_ad_hash:
+			self._has_ad[has_ad_hash] = self._query_ad(*args, **kwargs).exists()
+			return self._has_ad[has_ad_hash]
+		else:
+			return self._query_ad(*args, **kwargs).exists()
 
 			
 	def get_custom_ad(self, slug, pos, **kwargs):
 		""" Gets custom ad code if it exists """
 		try:
 			custom_ad = Custom_Ad.objects.get(slug=slug)
-			return render_custom_ad(pos, custom_ad, **kwargs)
+			return self.render_custom_ad(pos, custom_ad, **kwargs)
 			
 		except Custom_Ad.DoesNotExist:
 			return ""
