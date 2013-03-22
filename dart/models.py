@@ -68,6 +68,10 @@ class Position(models.Model):
 	
 	sizes = models.ManyToManyField("Size", null=False, blank=False)
 
+	date_created = models.DateTimeField(auto_now_add=True)
+
+	date_modified = models.DateTimeField(auto_now=True)
+
 	class Meta:
 		verbose_name_plural = "Ad Positions"
 		
@@ -124,6 +128,10 @@ class Custom_Ad(models.Model):
 	load_template = models.ForeignKey("Custom_Ad_Template", null=True, blank=True, default=None, help_text="Load HTML code into the embed field from a pre-defined template")
 	
 	text_version = models.TextField(blank=True, help_text="Text version of ad for newsletters or Javascript disabled browsers")
+	
+	date_created = models.DateTimeField(auto_now_add=True)
+
+	date_modified = models.DateTimeField(auto_now=True)
 
 	class Meta:
 		verbose_name = "Custom Ad"
@@ -161,12 +169,17 @@ class Zone_Position(models.Model):
 	
 	custom_ad = models.ForeignKey(Custom_Ad, blank=True, null=True,)
 	
-	enabled = models.BooleanField(default=True)
+	enabled = models.IntegerField(choices=((0, "Disabled"), (1, "Enabled"), (2, "Scheduled")), default=1)
 	
 	sync = models.BooleanField(default=True, help_text="Determines whether the position is synced with DART when sync task is run.  Otherwise enabled manually.")
 	
+	date_published = models.DateTimeField(blank=False)
+	
+	date_created = models.DateTimeField(auto_now_add=True)
+
+	date_modified = models.DateTimeField(auto_now=True)
+	
 	def default_dart_tag(self):
-		
 		return Ad_Page(zone=self.zone.slug).js_url(self.position.slug, size=self.position.sizes.all()[0].dart_formatted_size)
 	
 	def __unicode__(self):
@@ -177,6 +190,10 @@ class Zone_Position(models.Model):
 		verbose_name_plural = "Enabled Positions"
 		ordering = ["zone__name"]
 
+	def save(self, *args, **kwargs):
+		if not self.date_published:
+			self.date.published = time.date.today()
+		return super(Zone_Position, self).save(*args, **kwargs)
 class Ad_Page(object):
 	""" 
 	Base class for ad settings on a page and rendering ad tag HTML 
