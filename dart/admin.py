@@ -1,11 +1,12 @@
 from django.contrib import admin
-from settings import ADMIN_MEDIA_PREFIX, STANDARD_ADMIN_MEDIA_PREFIX
+from settings import STATIC_URL
 from dart.models import Zone, Position, Custom_Ad, Custom_Ad_Template, Zone_Position, Size, Site
 from settings import STATIC_URL
 		
 class Zone_PositionInline(admin.TabularInline):
 	model = Zone.position.through
 	ordering = ("position__name",)
+	fields = ("position", "custom_ad", "enabled", "date_published")
 
 	
 class Zone_Admin(admin.ModelAdmin):
@@ -16,7 +17,7 @@ class Zone_Admin(admin.ModelAdmin):
 	ct_fk_field = "object_id"
 	css = {
 		"all": (
-			ADMIN_MEDIA_PREFIX + "blog/css/autocomplete.css",
+			STATIC_URL + "blog/css/autocomplete.css",
 		)
 	}
 	
@@ -41,15 +42,21 @@ class Zone_Position_Admin(admin.ModelAdmin):
 	
 	fieldsets = (
 		(None, {
-			"fields": ("zone", "position", "custom_ad", "enabled", "sync")
+			"fields": ("zone", "position", "custom_ad", "enabled", "date_published", "sync", )
 		}),
 	)
+	class Media:
+		
+		js = (
+			STATIC_URL + "admin/dart/js/zone_position.js",
+		)	
 
 
 class Zone_Inline(admin.TabularInline):
 	model = Zone.position.through
 	verbose_name = "Enabled Zones"
 	verbose_name_plural = "Enabled Zones"
+	fields = ("zone", "custom_ad", "enabled", "date_published")
 
 class Position_Admin(admin.ModelAdmin):
 	prepopulated_fields = {"slug" : ("name",)}
@@ -57,7 +64,7 @@ class Position_Admin(admin.ModelAdmin):
 	class Media:
 		
 		js = (
-			STANDARD_ADMIN_MEDIA_PREFIX + "dart/js/position.js",
+			STATIC_URL + "admin/dart/js/position.js",
 		)
 	
 	fieldsets = (
@@ -89,7 +96,7 @@ class Custom_Ad_Admin(admin.ModelAdmin):
 	class Media:
 		
 		js = (
-			STANDARD_ADMIN_MEDIA_PREFIX + "dart/js/custom_ad.js",
+			STATIC_URL + "admin/dart/js/custom_ad.js",
 		)
 	fieldsets = (
 		(None, {
