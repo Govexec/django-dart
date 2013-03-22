@@ -1,6 +1,6 @@
 import httplib, re
 from django.conf import settings
-from dart.models import Zone, DART_DOMAIN, Ad_Page
+from dart.models import Zone, Zone_Position, DART_DOMAIN, Ad_Page
 import settings, time
 
 
@@ -109,3 +109,10 @@ def dart_request(url, user_agent=DEFAULT_BROWSER_AGENT, domain=DART_DOMAIN, *arg
 	
 	return conn.getresponse()
 	
+def dart_publish_scheduled_ads():
+	"""
+	Enables all ads set to publish in the future that aren't being synced with DART
+	"""
+	Zone_Position.objects.filter(enabled=False, date_published__lte=datetime.date.today(), sync=False).update(enabled=True)
+
+
