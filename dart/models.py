@@ -1,4 +1,5 @@
 import hashlib
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.template.defaultfilters import slugify
 from ckeditor.fields import RichTextField
@@ -29,12 +30,26 @@ class Size(models.Model):
 	"""
 	name = models.CharField(max_length=255, null=False, blank=False) 
 	
-	width = models.PositiveSmallIntegerField(default=0, null=False, blank=False, help_text="Use zero for unknown/variable values")
+	width = models.PositiveSmallIntegerField(default=0, null=False, blank=True, help_text="Use zero for unknown/variable values")
 	
-	height = models.PositiveSmallIntegerField(default=0, null=False, blank=False, help_text="Use zero for unknown/variable values")
+	height = models.PositiveSmallIntegerField(default=0, null=False, blank=True, help_text="Use zero for unknown/variable values")
 	
 	def __unicode__(self):
 		return u"%s - %s" % (self.name, self.dart_formatted_size)
+	
+	def clean(self, *args, **kwargs):
+		if not (self.width or self.height):
+			raise ValidationError("Either a width or a height must be specified")
+
+		if not self.width:
+			self.width = 0
+		
+		if not self.height:
+			self.height = 0
+
+		return super(Size, self).clean(*args, **kwargs)
+
+
 	
 	@property
 	def dart_formatted_size(self):
