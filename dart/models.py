@@ -207,8 +207,11 @@ class Zone_Position(models.Model):
 
 	def save(self, *args, **kwargs):
 		if not self.date_published:
-			self.date.published = time.date.today()
+			self.date_published = datetime.now()
+		if not self.date_created:
+			self.date_created = datetime.now()
 		return super(Zone_Position, self).save(*args, **kwargs)
+
 class Ad_Page(object):
 	""" 
 	Base class for ad settings on a page and rendering ad tag HTML 
