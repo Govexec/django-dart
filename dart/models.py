@@ -23,6 +23,12 @@ DART_NETWORK_CODE = getattr(settings, "DART_NETWORK_CODE", "")
 # If enabled shows cats from placekitten.com instead of ads for testing
 DART_PLACEHOLDER_MODE = getattr(settings, "DART_PLACEHOLDER_MODE", False)
 
+# Template be used instead of built-in templates
+DART_DEFAULT_AD_TEMPLATE = getattr(settings, "DART_DEFAULT_AD_TEMPLATE", None)
+
+
+DART_RENDER_FORMATS = ((0, "Javascript"), (1, "Blank"), (2, "Iframe"))
+
 
 class Size(models.Model):
 	"""
@@ -57,12 +63,20 @@ class Size(models.Model):
 
 class Site(models.Model):
 	""" DART site value that can be associated with a Django Site """
+	
+	site = models.ForeignKey(Django_Site, blank=False)
 
 	slug = models.CharField("DART site handle", help_text="This is the same field passed to DART as the site", max_length=255, null=False, blank=False)
 	
 	slug_dev = models.CharField("DART development site handle", help_text="Development DART site handle to be used when DEBUG is enabled", max_length=255, null=False, blank=True)
 	
-	site = models.ForeignKey(Django_Site, blank=True)
+	disable_ad_manager = models.BooleanField(default=True, help_text="Toggles whether this app controls display of ad positions and allow custom HTML to be inserted")
+	
+	default_render_format = models.PositiveIntegerField(null=False, blank=False, default=0, choices=DART_RENDER_FORMATS, help_text="Default type of DART code to render if not specified in ad tag")
+	
+	network_code = models.CharField(max_length=100, default="", blank=True, null=False, help_text="DART network code if needed")
+	
+	default_zone = models.CharField(max_length=100, default="", blank=True, null=False, help_text="DART handle to use for pages that don't specify a zone" )
 	
 	class Meta:
 		verbose_name_plural = "Sites"
@@ -211,6 +225,8 @@ class Zone_Position(models.Model):
 		if not self.date_created:
 			self.date_created = datetime.now()
 		return super(Zone_Position, self).save(*args, **kwargs)
+		
+
 
 class Ad_Page(object):
 	""" 
@@ -222,11 +238,12 @@ class Ad_Page(object):
 	site = None
 	zone = None
 	network_code = None
-	default_render_js = True
+	default_render_format = 0
 	disable_ad_manager = True
 	page_ads = {}
+	template = DART_DEFAULT_AD_TEMPLATE
 
-	def __init__(self, settings={}, site=None, zone=None, network_code="", default_render_js=None, disable_ad_manager=None, ad_attributes={}, ad_settings={}, *args, **kwargs):
+	def __init__(self, site=None, zone=None, network_code="", default_render_format=None, disable_ad_manager=None, ad_attributes={}, ad_settings={}, template=None, *args, **kwargs):
 		""" 
 		Ad page attributes that are configured here:
 			site - DART site - string
@@ -238,23 +255,24 @@ class Ad_Page(object):
 			Kwargs are passed to DART string. Can be any key, value pair - dict
 			
 		"""
-		temp_default = DART_AD_DEFAULTS.copy() if DART_AD_DEFAULTS else {}
-		if settings:
-			temp_default.update(settings)
+		# pull in the settings from the DB		
+		ad_site = Site.objects.get(site_id=settings.SITE_ID)
+		self.site = ad_site.site
+		self.zone = ad_site.default_zone
+		self.disable_ad_manager = not ad_site.disable_ad_manager
+		self.default_render_format = ad_site.default_render_format
+		self.network_code = ad_site.network_code
 		
-		for setting in temp_default:
-			self.__setattr__(setting, temp_default[setting])
+		if hasattr(settings, "DART_AD_DEFAULTS"):
+			for setting in settings.DART_AD_DEFAULTS:
+				setattr(self, setting, settings.DART_AD_DEFAULTS[setting])
 		
-		
+		# if any custom settings are passed as kwargs
 		if site: self.site = site
 		if zone: self.zone = zone
-
-		self.network_code = DART_NETWORK_CODE if DART_NETWORK_CODE else network_code
-
-		if default_render_js: self.default_render_js = default_render_js
+		if template: self.template = template
+		if default_render_format: self.default_render_format = default_render_format
 		if disable_ad_manager: self.disable_ad_manager = disable_ad_manager
-	
-		
 		if ad_attributes:
 			self.ad_attributes.update(ad_attributes)
 			
@@ -262,13 +280,6 @@ class Ad_Page(object):
 		if ad_settings:
 			self.ad_attributes.update(ad_settings)
 		
-		# Preloader commented out because of possible caching conflicts
-		# Pre-load all of the ads for the page into a dict
-		#if not self.disable_ad_manager:
-		#	page_ads = Zone_Position.objects.all().filter(zone__slug__in=(self.zone,"ros"), enabled=True)
-		#	for ad in page_ads:
-		#		self.page_ads[ad.position.slug] = ad
-
 	@property
 	def tile(self):
 		""" Gets and increments the tile position for the page """
@@ -350,6 +361,8 @@ class Ad_Page(object):
 	def render_custom_ad(self, pos, custom_ad, template="dart/embed.html", text_version=False, desc_text="", omit_noscript=False, **kwargs):
 		""" Renders the custom ad, determining which template to use based on custom ad settings """
 	
+		if self.template: template = self.template
+		
 		if text_version:
 			return custom_ad.text_version
 			
@@ -374,6 +387,8 @@ class Ad_Page(object):
 			Renders a DART JS tag to the ad HTML template 
 		"""
 		
+		if self.template: template = self.template
+		
 		context_vars = {
 			"js_url": self.js_url(pos, **kwargs),
 			"link_url": self.link_url(pos, **kwargs),
@@ -390,15 +405,40 @@ class Ad_Page(object):
 		return t.render(c)
 		
 		
+	def render_iframe_ad(self, pos, template="dart/iframe.html", desc_text="", omit_noscript=False, **kwargs):
+		""" 
+			Renders a DART Iframe tag to the ad HTML template 
+		"""
+		if self.template: template = self.template
+		
+		width, height = self.dimensions(kwargs["size"])
+		
+		context_vars = {
+			"iframe_url": self.iframe_url(pos, **kwargs),
+			"desc_text": desc_text,
+			"width": width,
+			"height": height,
+			"pos": pos,
+            "kwargs": kwargs,
+		}
+
+		t = loader.get_template(template)
+		c = Context(context_vars)
+		return t.render(c)
+		
+		
 		
 	def render_default(self, pos, custom_only=False, omit_noscript=False, **kwargs):
 		"""  
 			Renders default ad content, blank or DART javascript,
 			depending on settings 
-		"""
-	
-		if self.default_render_js and not custom_only:
+		""" 
+		if custom_only:
+			return ""
+		if DART_RENDER_FORMATS[self.default_render_format][1] == "Javascript":
 			return self.render_js_ad(pos, omit_noscript=omit_noscript, **kwargs)
+		elif DART_RENDER_FORMATS[self.default_render_format][1] == "Iframe":
+			return self.render_iframe_ad(pos, **kwargs)
 		else:
 			return ""
 	
@@ -575,4 +615,7 @@ class Ad_Page(object):
 		""" Gets the DART URL for a link used in HTML ads """
 		return self.format_url(pos, "jump", **kwargs)
 
+	def dimensions(self, size):
+		first_size = size.split(",")[0]
+		return first_size.split("x")
 

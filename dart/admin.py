@@ -79,12 +79,7 @@ class Position_Admin(admin.ModelAdmin):
 	
 class Site_Admin(admin.ModelAdmin):
 	ordering = ("slug",)
-	
-	fieldsets = (
-		(None, {
-			"fields": ("slug", "slug_dev", "site", )
-		}),
-	)
+
 
 class Custom_Ad_Template_Admin(admin.ModelAdmin):
 	pass	
