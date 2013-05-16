@@ -463,8 +463,9 @@ class Ad_Page(object):
 			"pos": slug,
 			"width": size[0],
 			"height": size[1],
-            "kwargs": kwargs,
+			"kwargs": kwargs,
 		}
+
 		t = loader.get_template()
 		c = Context(context_vars)
 		return t.render(c)
