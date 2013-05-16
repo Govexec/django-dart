@@ -466,7 +466,7 @@ class Ad_Page(object):
 			"kwargs": kwargs,
 		}
 
-		t = loader.get_template()
+		t = loader.get_template(DART_PLACEHOLDER_TEMPLATE)
 		c = Context(context_vars)
 		return t.render(c)
 		
