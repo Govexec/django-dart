@@ -463,9 +463,8 @@ class Ad_Page(object):
 			"pos": slug,
 			"width": size[0],
 			"height": size[1],
-            "kwargs": kwargs,
+			"kwargs": kwargs,
 		}
-		
 		t = loader.get_template(DART_PLACEHOLDER_TEMPLATE)
 		c = Context(context_vars)
 		return t.render(c)
