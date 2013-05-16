@@ -261,7 +261,7 @@ class Ad_Page(object):
 		ad_site = Site.objects.get(site_id=settings.SITE_ID)
 		self.site = ad_site.site
 		self.zone = ad_site.default_zone
-		self.disable_ad_manager = not ad_site.disable_ad_manager
+		self.disable_ad_manager = ad_site.disable_ad_manager
 		self.default_render_format = ad_site.default_render_format
 		self.network_code = ad_site.network_code
 		
@@ -465,6 +465,7 @@ class Ad_Page(object):
 			"height": size[1],
             "kwargs": kwargs,
 		}
+		
 		t = loader.get_template(DART_PLACEHOLDER_TEMPLATE)
 		c = Context(context_vars)
 		return t.render(c)
