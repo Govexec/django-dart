@@ -29,6 +29,8 @@ DART_DEFAULT_AD_TEMPLATE = getattr(settings, "DART_DEFAULT_AD_TEMPLATE", None)
 
 DART_RENDER_FORMATS = ((0, "Javascript"), (1, "Blank"), (2, "Iframe"))
 
+DART_PLACEHOLDER_TEMPLATE = getattr(settings, "DART_PLACEHOLDER_TEMPLATE", "dart/placeholder.html")
+
 
 class Size(models.Model):
 	"""
@@ -463,7 +465,7 @@ class Ad_Page(object):
 			"height": size[1],
             "kwargs": kwargs,
 		}
-		t = loader.get_template("dart/placeholder.html")
+		t = loader.get_template()
 		c = Context(context_vars)
 		return t.render(c)
 		
