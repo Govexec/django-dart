@@ -259,7 +259,10 @@ class Ad_Page(object):
 		"""
 		# pull in the settings from the DB		
 		ad_site = Site.objects.get(site_id=settings.SITE_ID)
-		self.site = ad_site.site
+		if settings.DEBUG:
+			self.site = ad_site.slug_dev
+		else:
+			self.site = ad_site.slug
 		self.zone = ad_site.default_zone
 		self.disable_ad_manager = ad_site.disable_ad_manager
 		self.default_render_format = ad_site.default_render_format
