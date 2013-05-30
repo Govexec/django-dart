@@ -80,6 +80,13 @@ class Site(models.Model):
 	
 	default_zone = models.CharField(max_length=100, default="", blank=True, null=False, help_text="DART handle to use for pages that don't specify a zone" )
 	
+	@property
+	def handle(self):
+		if settings.DEBUG:
+			return self.slug_dev
+		else:
+			return self.slug
+	
 	class Meta:
 		verbose_name_plural = "Sites"
 		verbose_name = "Site"
@@ -259,10 +266,7 @@ class Ad_Page(object):
 		"""
 		# pull in the settings from the DB		
 		ad_site = Site.objects.get(site_id=settings.SITE_ID)
-		if settings.DEBUG:
-			self.site = ad_site.slug_dev
-		else:
-			self.site = ad_site.slug
+		self.site = ad_site.handle
 		self.zone = ad_site.default_zone
 		self.disable_ad_manager = ad_site.disable_ad_manager
 		self.default_render_format = ad_site.default_render_format

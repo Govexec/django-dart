@@ -1,4 +1,4 @@
-<div class="ad ad-{{ pos }}">
+<div class="ad ad-{{ pos }}{% if kwargs["class"] %} {{ kwargs["class"] }}{% endif %}">
 
 	{% if desc_text %}<span class="presented-by">{{ desc_text }}</span>{% endif %}
 
