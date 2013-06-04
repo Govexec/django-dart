@@ -211,7 +211,7 @@ class Zone_Position(models.Model):
 	
 	sync = models.BooleanField(default=True, help_text="Determines whether the position is synced with DART when sync task is run.  Otherwise enabled manually.")
 	
-	date_published = models.DateTimeField(blank=False)
+	date_published = models.DateTimeField(blank=True)
 	
 	date_created = models.DateTimeField(auto_now_add=True)
 
