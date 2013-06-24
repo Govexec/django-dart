@@ -1,7 +1,7 @@
 (function($){
      $(function(){
 		toggle_date_published = function() {
-			if ($("#id_enabled:selected").val() == 2){
+			if ($("#id_enabled :selected").val() == 2){
 				$(".date_published").show();
 			}else {
 				$(".date_published").hide();
