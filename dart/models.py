@@ -243,7 +243,7 @@ class Ad_Page(object):
 	"""
 	
 	ad_attributes = {}
-	_tile = 0
+	_tile = 1
 	site = None
 	zone = None
 	network_code = None
@@ -291,8 +291,6 @@ class Ad_Page(object):
 		
 	@property
 	def tile(self):
-		""" Gets and increments the tile position for the page """
-		self._tile = self._tile + 1
 		return self._tile
 		
 	def _query_ad(self, pos, site=None, custom_zone=None, custom_ad=False, **kwargs):
@@ -512,18 +510,18 @@ class Ad_Page(object):
 		# If kitten mode, just show those ads
 		if DART_PLACEHOLDER_MODE:
 			if ad_manager_disabled:
-				return self.render_placeholder(pos=pos, **kwargs)
+				output = self.render_placeholder(pos=pos, **kwargs)
 			else:
 				ad = self.get_ad(pos, **kwargs)
 				if ad:
-					return self.render_placeholder(ad=ad, **kwargs)
+					output = self.render_placeholder(ad=ad, **kwargs)
 				else:
-					return ""
+					output = ""
 		else:
 				
 			# If ad manager is disabled, it goes straight to displaying the iframe/js code
 			if ad_manager_disabled:
-				return self.render_default(pos, omit_noscript=omit_noscript, **kwargs)
+				output = self.render_default(pos, omit_noscript=omit_noscript, **kwargs)
 			else:
 			# using the ad manager
 				
@@ -538,16 +536,20 @@ class Ad_Page(object):
 					
 				if ad and ad.custom_ad:
 					# if we have an ad, and its a custom one
-					return self.render_custom_ad(pos, ad.custom_ad, omit_noscript=omit_noscript, **kwargs)
+					output = self.render_custom_ad(pos, ad.custom_ad, omit_noscript=omit_noscript, **kwargs)
 					
 				elif ad and not ad.custom_ad:
 					# if we have an ad
 					if "size" not in kwargs:
 						kwargs["size"] = ad.position.size_list_string
-					return self.render_js_ad(pos, omit_noscript=omit_noscript, **kwargs)
+					output = self.render_js_ad(pos, omit_noscript=omit_noscript, **kwargs)
 				else:
-					return self.render_default(pos, omit_noscript=omit_noscript, **kwargs)
-	
+					output = self.render_default(pos, omit_noscript=omit_noscript, **kwargs)
+					
+		# increment tile variable only for every ad rendered to keep it within 1-17 range for the page
+		self._tile = self._tile + 1
+		
+		return output
 	
 	# Methods to format DART URLs
 	
@@ -601,14 +603,19 @@ class Ad_Page(object):
 		
 		return url
 		
-	def format_path(self, pos, ad_type, **kwargs):
+	def format_path(self, pos, ad_type, use_tile=True, **kwargs):
 		""" Formats the DART path, without domain, for those instances where that's useful.  Passed to format URL to create the whole ad tag """
 		url = self.param_string(pos, **kwargs)
+		
+		path = "/%s/%s" % (ad_type, url)
 
 		if self.network_code:
-			return "/N%s/%s/%stile=%s;" % (self.network_code, ad_type, url, self.tile)
-		else:
-			return "/%s/%stile=%s;" % (ad_type, url, self.tile)
+			path = ("/N%s" + path) % self.network_code
+			
+		if use_tile:
+			path = (path + "tile=%s;") % self.tile
+		
+		return path
 			
 	def format_url(self, pos, ad_type, **kwargs):
 		""" Formats the DART URL from a set of keyword arguments and settings """
@@ -637,7 +644,7 @@ class Ad_Page(object):
 		
 	def link_url(self, pos, **kwargs):
 		""" Gets the DART URL for a link used in HTML ads """
-		return self.format_url(pos, "jump", **kwargs)
+		return self.format_url(pos, "jump", use_tile=False, **kwargs)
 
 	def dimensions(self, size):
 		first_size = size.split(",")[0]
