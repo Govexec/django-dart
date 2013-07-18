@@ -31,6 +31,9 @@ DART_RENDER_FORMATS = ((0, "Javascript"), (1, "Blank"), (2, "Iframe"))
 
 DART_PLACEHOLDER_TEMPLATE = getattr(settings, "DART_PLACEHOLDER_TEMPLATE", "dart/placeholder.html")
 
+STANDARD_JS_AD_TEMPLATE = "dart/ad.html"
+STANDARD_CUSTOM_AD_TEMPLATE = "dart/embed.html"
+STANDARD_IFRAME_AD_TEMPLATE = "dart/iframe.html"
 
 class Size(models.Model):
 	"""
@@ -365,7 +368,7 @@ class Ad_Page(object):
 			return ""
 			
 	
-	def render_custom_ad(self, pos, custom_ad, template="dart/embed.html", text_version=False, desc_text="", omit_noscript=False, **kwargs):
+	def render_custom_ad(self, pos, custom_ad, template=STANDARD_CUSTOM_AD_TEMPLATE, text_version=False, desc_text="", omit_noscript=False, **kwargs):
 		""" Renders the custom ad, determining which template to use based on custom ad settings """
 	
 		if self.template: template = self.template
@@ -389,12 +392,12 @@ class Ad_Page(object):
 		else:
 			return ""
 			
-	def render_js_ad(self, pos, template="dart/ad.html", desc_text="", omit_noscript=False, **kwargs):
+	def render_js_ad(self, pos, template=STANDARD_JS_AD_TEMPLATE, desc_text="", omit_noscript=False, backup_pos=None, **kwargs):
 		""" 
 			Renders a DART JS tag to the ad HTML template 
 		"""
-		
-		if self.template: template = self.template
+
+		if self.template and template == STANDARD_JS_AD_TEMPLATE: template = self.template
 		
 		context_vars = {
 			"js_url": self.js_url(pos, **kwargs),
@@ -407,12 +410,16 @@ class Ad_Page(object):
             "kwargs": kwargs,
 		}
 
+		if backup_pos is not None:
+			context_vars["backup_link_url"] = self.link_url(backup_pos, **kwargs)
+			context_vars["backup_image_url"] = self.image_url(backup_pos, **kwargs)
+
 		t = loader.get_template(template)
 		c = Context(context_vars)
 		return t.render(c)
 		
 		
-	def render_iframe_ad(self, pos, template="dart/iframe.html", desc_text="", omit_noscript=False, **kwargs):
+	def render_iframe_ad(self, pos, template=STANDARD_IFRAME_AD_TEMPLATE, desc_text="", omit_noscript=False, **kwargs):
 		""" 
 			Renders a DART Iframe tag to the ad HTML template 
 		"""
