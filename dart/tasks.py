@@ -1,7 +1,7 @@
 import httplib, re
 from django.conf import settings
 from dart.models import Zone, Zone_Position, DART_DOMAIN, Ad_Page
-import settings, time
+import time
 
 
 # String used to define a browser when making DART requests from a commandline

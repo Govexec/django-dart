@@ -1,7 +1,6 @@
+from django.conf import settings
 from django.contrib import admin
 from dart.models import Zone, Position, Custom_Ad, Custom_Ad_Template, Zone_Position, Size, Site
-from settings import NON_CDN_STATIC_URL
-from settings import STATIC_URL
 
 class Zone_PositionInline(admin.TabularInline):
 	model = Zone.position.through
@@ -17,7 +16,7 @@ class Zone_Admin(admin.ModelAdmin):
 	ct_fk_field = "object_id"
 	css = {
 		"all": (
-			STATIC_URL + "blog/css/autocomplete.css",
+			settings.STATIC_URL + "blog/css/autocomplete.css",
 		)
 	}
 
@@ -48,7 +47,7 @@ class Zone_Position_Admin(admin.ModelAdmin):
 	class Media:
 
 		js = (
-			STATIC_URL + "admin/dart/js/zone_position.js",
+			settings.STATIC_URL + "admin/dart/js/zone_position.js",
 		)
 
 
@@ -64,7 +63,7 @@ class Position_Admin(admin.ModelAdmin):
 	class Media:
 
 		js = (
-			STATIC_URL + "admin/dart/js/position.js",
+			settings.STATIC_URL + "admin/dart/js/position.js",
 		)
 
 	fieldsets = (
@@ -85,7 +84,7 @@ class Custom_Ad_Template_Admin(admin.ModelAdmin):
 	class Media:
 		js = (
 			'/static/js/jquery-1.8.1.min.js',
-			NON_CDN_STATIC_URL + 'js/responsive_embed.js',
+			settings.NON_CDN_STATIC_URL + 'js/responsive_embed.js',
 		)
 
 class Custom_Ad_Admin(admin.ModelAdmin):
@@ -94,9 +93,9 @@ class Custom_Ad_Admin(admin.ModelAdmin):
 
 	class Media:
 		js = (
-			STATIC_URL + "admin/dart/js/custom_ad.js",
+			settings.STATIC_URL + "admin/dart/js/custom_ad.js",
 			'/static/js/jquery-1.8.1.min.js',
-			NON_CDN_STATIC_URL + 'js/responsive_embed.js',
+			settings.NON_CDN_STATIC_URL + 'js/responsive_embed.js',
 		)
 	fieldsets = (
 		(None, {
