@@ -1,4 +1,4 @@
-from coffin.conf.urls.defaults import *
+from coffin.conf.urls import patterns, url
 
 urlpatterns = patterns("dart.views",
 
