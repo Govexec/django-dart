@@ -261,7 +261,7 @@ class Ad_Page(object):
 	page_ads = {}
 	template = DART_DEFAULT_AD_TEMPLATE
 
-	def __init__(self, site=None, zone=None, network_code="", site_id=settings.SITE_ID, default_render_format=None, disable_ad_manager=None, ad_attributes={}, ad_settings={}, template=None, rooot_ad_zone=None, *args, **kwargs):
+	def __init__(self, site=None, zone=None, network_code="", site_id=settings.SITE_ID, default_render_format=None, disable_ad_manager=None, ad_attributes={}, ad_settings={}, template=None, root_ad_zone=None, *args, **kwargs):
 		""" 
 		Ad page attributes that are configured here:
 			site - DART site - string
@@ -275,8 +275,8 @@ class Ad_Page(object):
 		"""
 		# pull in the settings from the DB		
 		ad_site = Site.objects.get(site_id=site_id)
-		if rooot_ad_zone:
-				self.site = rooot_ad_zone
+		if root_ad_zone:
+			self.site = root_ad_zone
 		else:
 			self.site = ad_site.handle
 		self.zone = ad_site.default_zone
