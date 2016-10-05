@@ -47,7 +47,7 @@ class Zone_Position_Admin(admin.ModelAdmin):
 	class Media:
 
 		js = (
-			settings.STATIC_URL + "admin/dart/js/zone_position.js",
+			"admin/dart/js/zone_position.js",
 		)
 
 
@@ -63,7 +63,7 @@ class Position_Admin(admin.ModelAdmin):
 	class Media:
 
 		js = (
-			settings.STATIC_URL + "admin/dart/js/position.js",
+			"admin/dart/js/position.js",
 		)
 
 	fieldsets = (
@@ -83,8 +83,8 @@ class Site_Admin(admin.ModelAdmin):
 class Custom_Ad_Template_Admin(admin.ModelAdmin):
 	class Media:
 		js = (
-			'/static/js/jquery-1.8.1.min.js',
-			settings.NON_CDN_STATIC_URL + 'js/responsive_embed.js',
+			'js/jquery-1.8.1.min.js',
+			'js/responsive_embed.js',
 		)
 
 class Custom_Ad_Admin(admin.ModelAdmin):
@@ -93,9 +93,9 @@ class Custom_Ad_Admin(admin.ModelAdmin):
 
 	class Media:
 		js = (
-			settings.STATIC_URL + "admin/dart/js/custom_ad.js",
-			'/static/js/jquery-1.8.1.min.js',
-			settings.NON_CDN_STATIC_URL + 'js/responsive_embed.js',
+			"admin/dart/js/custom_ad.js",
+			'js/jquery-1.8.1.min.js',
+			'js/responsive_embed.js',
 		)
 	fieldsets = (
 		(None, {
