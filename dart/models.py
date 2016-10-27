@@ -93,13 +93,7 @@ class Site(models.Model):
 	class Meta:
 		verbose_name_plural = "Sites"
 		verbose_name = "Site"
-		permissions = (
-			('add_site', 'Can add site',),
-			('change_site', 'Can change site',),
-			('delete_site', 'Can delete site',),
-		)
 
-		
 	def __unicode__(self, *args, **kwargs):
 		return self.slug
 
